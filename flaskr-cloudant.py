@@ -6,14 +6,18 @@ import logging
 
 # configuration (could also be in external file...see below)
 # Create a database called DATABASE in your ACCOUNT.cloudant.com and make it world-writeable
-ACCOUNT = 'michaelbreslin'
-DATABASE = 'flaskr'
+ACCOUNT = 'claudiusli'
+MESAGEDB = 'flaskr_message'
+USERDB = 'flaskr_user'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
 # create our little application :)
+# it seems that using __name__ is not canonical
+# but I don't really understand why
+# http://flask.pocoo.org/docs/api/
 app = Flask(__name__)
 
 # get configuration details (either from this or external file)
@@ -28,7 +32,7 @@ def connect_db():
 	"""Returns a new connection to the Cloudant database."""
 	app.logger.debug('Connecting to Cloudant database...')
 	account = cloudant.Account(app.config['ACCOUNT'])
-	return account.database(app.config['DATABASE'])
+	return account.database(app.config['MESAGEDB'])
 	#app.logger.debug('Connected to Cloudant database...')
 
 @app.before_request
@@ -79,6 +83,20 @@ def login():
 			flash('You were logged in')
 			return redirect(url_for('show_entries'))
 	return render_template('login.html', error=error)
+
+@app.route('/createaccount', methods=['GET', 'POST'])
+def createaccount():
+	error = None
+	if request.method == 'POST':
+		if request.form['username'] != app.config['USERNAME']:
+			error = 'Invalid username'
+		elif request.form['password'] != app.config['PASSWORD']:
+			error = 'Invalid password'
+		else:
+			session['logged_in'] = True
+			flash('You were logged in')
+			return redirect(url_for('show_entries'))
+	return render_template('createaccount.html', error=error)
 
 @app.route('/logout')
 def logout():
