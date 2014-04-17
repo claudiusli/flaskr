@@ -1,0 +1,5 @@
+requests-futures==0.9.4
+
+[docs]
+jinja2>=2.7
+markdown>=2.3.1

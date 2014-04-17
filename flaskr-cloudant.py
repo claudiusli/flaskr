@@ -28,17 +28,18 @@ app.config.from_object(__name__)
 #app.config.from_envvar('FLASKR_SETTINGS', silent=False)
 
 # Make sure you are installed
-def connect_db():
+def connect_db(account_name):
 	"""Returns a new connection to the Cloudant database."""
 	app.logger.debug('Connecting to Cloudant database...')
-	account = cloudant.Account(app.config['ACCOUNT'])
+	#account = cloudant.Account(app.config['ACCOUNT'])
+        account = cloudant.Account(account_name)
 	return account.database(app.config['MESAGEDB'])
 	#app.logger.debug('Connected to Cloudant database...')
 
 @app.before_request
 def before_request():
     """Make sure we are connected to the database each request."""
-    g.db = connect_db()
+    g.db = connect_db(app.config['ACCOUNT'])
     #Entry.set_db(g.db)
 
 @app.teardown_request
