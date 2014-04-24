@@ -57,25 +57,51 @@ def authenticate():
     url = config['baseurl'] + '_session'
     data = dict(name=config['username'],
                 password=config['password'])
-    r = requests.post(url, data = data, headers = header)
-    #s = requests.Session()
-    #s.auth = (config['username'], config['password'])
-    #r = s.get(url)
-    return(r.headers['set-cookie'])
+    response = requests.post(url, data = data, headers = header)
+    if 'error' in response.json():
+        if response.json()['error'] == 'forbidden':
+            print response.json()['reason']
+            sys.exit()
+    return(response.headers['set-cookie'])
+
+def generate_api_key(authcookie):
+    '''
+    generate an api key and return a dict with the username/password
+    '''
+    url = 'https://cloudant.com/api/generate_api_key'
+    header = {'Cookie': authcookie}
+    r = requests.post(url, headers = header)
+    key = json.loads(r.text)['key']
+    password= json.loads(r.text)['password']
+    api_key = dict(user = key,
+                   password = password)
+    return(api_key)
 
 def create_db(dbname, authcookie):
     '''
     create the a database <dbname> under account <account>
     '''
-    header = {'Cookie': authcookie}
     url = config['baseurl'] + dbname
+    header = {'Cookie': authcookie}
     response = requests.put(url, headers = header)
     if 'error' in response.json():
         if response.json()['error'] == 'file_exists':
-            print 'The user database "{0}" already exists! Aborting.'.format(dbname)
+            print response.json()['reason']
             sys.exit()
+
+def set_perms(dbname, username, authcookie):
+    url = 'https://cloudant.com/api/set_permissions'
+    data = dict(database = dbname,
+                username = username,
+                roles = ['_reader', '_writer'])
+    header = {'Cookie': authcookie}
+    response = requests.post(url,
+                             data = json.dumps(data),
+                             headers = header)
+    pprint(response.json())
                 
 def create_design_docs(messagedbname, authcookie):
+    url = config['baseurl'] + messagedbname + '/_design/app'
     searchfunction = '''function(doc){
     index("text", doc.text);
     index("title", doc.title);
@@ -84,16 +110,21 @@ def create_design_docs(messagedbname, authcookie):
     
     message_search = dict(analyzer = 'standard',
                           index = searchfunction)
-    header = {'Cookie': authcookie}
-    url = config['baseurl'] + messagedbname + '/'
-    #put the design doc in here
-#    response = requests.put
+    header = {'Cookie': authcookie, 'Content-Type': 'application/json'}
+    #print url
+    response = requests.put(url,
+                            data = json.dumps(message_search),
+                            headers = header)
+    #print response.json()
 
 def init_dbs():
     init_params()
     authcookie = authenticate()
+    api_key = generate_api_key(authcookie)
     create_db(config['userdbname'], authcookie)
     create_db(config['messagedbname'], authcookie)
+    set_perms(config['userdbname'], api_key['user'], authcookie)
+    set_perms(config['messagedbname'], api_key['user'], authcookie)
     create_design_docs(config['messagedbname'], authcookie)
     
 def main(argv):

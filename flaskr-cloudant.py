@@ -7,7 +7,7 @@ import logging
 # configuration (could also be in external file...see below)
 # Create a database called DATABASE in your ACCOUNT.cloudant.com and make it world-writeable
 ACCOUNT = 'claudiusli'
-MESAGEDB = 'flaskr_message'
+MESSAGEDB = 'flaskr_message'
 USERDB = 'flaskr_user'
 DEBUG = True
 SECRET_KEY = 'development key'
@@ -28,18 +28,18 @@ app.config.from_object(__name__)
 #app.config.from_envvar('FLASKR_SETTINGS', silent=False)
 
 # Make sure you are installed
-def connect_db(account_name):
+def connect_db(account_name, database_name):
 	"""Returns a new connection to the Cloudant database."""
 	app.logger.debug('Connecting to Cloudant database...')
 	#account = cloudant.Account(app.config['ACCOUNT'])
         account = cloudant.Account(account_name)
-	return account.database(app.config['MESAGEDB'])
+	return account.database(database_name)
 	#app.logger.debug('Connected to Cloudant database...')
 
 @app.before_request
 def before_request():
     """Make sure we are connected to the database each request."""
-    g.db = connect_db(app.config['ACCOUNT'])
+    g.db = connect_db(app.config['ACCOUNT'], app.config['MESSAGEDB'])
     #Entry.set_db(g.db)
 
 @app.teardown_request
@@ -84,6 +84,13 @@ def login():
 			flash('You were logged in')
 			return redirect(url_for('show_entries'))
 	return render_template('login.html', error=error)
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+	error = None
+	if request.method == 'POST':
+#		if request.form['searchterm'] != app.config['USERNAME']:
+                return redirect(url_for('show_entries'))
 
 @app.route('/createaccount', methods=['GET', 'POST'])
 def createaccount():
