@@ -94,7 +94,7 @@ def set_perms(dbname, username, authcookie):
     #This doesn't work at all. It returns a status code 400 and
     #{u'error': u'username_required', u'reason': u'Username not specified.'}
     url = 'https://cloudant.com/api/set_permissions'
-    data = dict(database = 'claudiusli/{0}'.format(dbname),
+    data = dict(database = '{0}/{1}'.format(username,dbname),
                 username = username,
                 roles = ['_reader', '_writer'])
     header = {'Cookie': authcookie}
@@ -105,7 +105,7 @@ def set_perms(dbname, username, authcookie):
     #This returns a status code of 200 and
     #{u'ok': True}
     #But I don't end up with any additional users for the database.
-    url = 'https://cloudant.com/api/set_permissions?database=claudiusli/{0}&username={1}&roles=_reader&roles=_writer'.format(dbname, username)
+    url = 'https://cloudant.com/api/set_permissions?database={1}/{0}&username={1}&roles=_reader&roles=_writer'.format(dbname, username)
     header = {'Cookie': authcookie, 'Content-type': 'application/x-www-form-urlencoded'}
 
     response = requests.post(url, headers = header)
