@@ -75,6 +75,9 @@ def generate_api_key(authcookie):
     password= json.loads(r.text)['password']
     api_key = dict(user = key,
                    password = password)
+    print 'API Key generated'
+    print 'key: {0}'.format(key)
+    print 'password: {0}'.format(password)
     return(api_key)
 
 def create_db(dbname, authcookie):
@@ -91,26 +94,16 @@ def create_db(dbname, authcookie):
 
 def set_perms(dbname, username, authcookie):
     '''
-    #This doesn't work at all. It returns a status code 400 and
-    #{u'error': u'username_required', u'reason': u'Username not specified.'}
-    url = 'https://cloudant.com/api/set_permissions'
-    data = dict(database = '{0}/{1}'.format(username,dbname),
-                username = username,
-                roles = ['_reader', '_writer'])
-    header = {'Cookie': authcookie}
-    response = requests.post(url,
-                             data = json.dumps(data),
-                             headers = header)
+    Let's hope this version works
+    curl -X POST https://cloudant.com/api/set_permissions -H 'Cookie: <authcooke>' -d 'database=<username>/<dbname>&username=<username>&roles=_writer&roles=_reader'
     '''
-    #This returns a status code of 200 and
-    #{u'ok': True}
-    #But I don't end up with any additional users for the database.
-    url = 'https://cloudant.com/api/set_permissions?database={1}/{0}&username={1}&roles=_reader&roles=_writer'.format(dbname, username)
-    header = {'Cookie': authcookie, 'Content-type': 'application/x-www-form-urlencoded'}
+    url = 'https://cloudant.com/api/set_permissions'
+    data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
+    header = {'Cookie': authcookie}
+    response = requests.post(url, data = data, headers = header)
 
-    response = requests.post(url, headers = header)
     print url
-#    print json.dumps(data)
+    print data
     print header
     pprint(response.json())
     print(response.status_code)
@@ -126,11 +119,9 @@ def create_design_docs(messagedbname, authcookie):
     message_search = dict(analyzer = 'standard',
                           index = searchfunction)
     header = {'Cookie': authcookie, 'Content-Type': 'application/json'}
-    #print url
     response = requests.put(url,
                             data = json.dumps(message_search),
                             headers = header)
-    #print response.json()
 
 def init_dbs():
     init_params()
