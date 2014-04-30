@@ -3,6 +3,7 @@ import os
 import getopt
 import getpass
 import json
+import urllib
 from pprint import pprint
 import requests
 
@@ -12,8 +13,9 @@ python flaskr-init.py -u <username>
 
 The user will be prompted for their password.
 
-If the user and messages database do not exist create them and create
-and create the apropriate views.
+If the user and messages database do not exist create them, create the 
+apropriate views and show the api key/password.
+
 Otherwise exit with an error message.
 '''
 
@@ -98,15 +100,18 @@ def set_perms(dbname, username, authcookie):
     curl -X POST https://cloudant.com/api/set_permissions -H 'Cookie: <authcooke>' -d 'database=<username>/<dbname>&username=<username>&roles=_writer&roles=_reader'
     '''
     url = 'https://cloudant.com/api/set_permissions'
-    data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
+    #data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
+    #this is an attempt to use urllib.urlencode to make the code neater
+    #the problem is that we can't put roles into a dict twice as above
+    data = dict( database = config['username'] + '/' + dbname,
+                 username = username,
+                 roles = '_reader'
+                 )
+                                 
     header = {'Cookie': authcookie}
-    response = requests.post(url, data = data, headers = header)
-
-    print url
-    print data
-    print header
-    pprint(response.json())
-    print(response.status_code)
+    response = requests.post(url,
+                             data = urllib.urlencode(data),
+                             headers = header)
                 
 def create_design_docs(messagedbname, authcookie):
     url = config['baseurl'] + messagedbname + '/_design/app'
