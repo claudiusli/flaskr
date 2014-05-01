@@ -101,28 +101,31 @@ def set_perms(dbname, username, authcookie):
     '''
     url = 'https://cloudant.com/api/set_permissions'
     #data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
-    #this is an attempt to use urllib.urlencode to make the code neater
-    #the problem is that we can't put roles into a dict twice as above
     data = dict( database = config['username'] + '/' + dbname,
                  username = username,
-                 roles = '_reader'
+                 roles = ['_reader', '_writer']
                  )
                                  
     header = {'Cookie': authcookie}
+    #the doseq=True option let's you put a list as a value in the dict and
+    #have it properly encode
     response = requests.post(url,
-                             data = urllib.urlencode(data),
+                             data = urllib.urlencode(data, doseq=True),
                              headers = header)
                 
 def create_design_docs(messagedbname, authcookie):
     url = config['baseurl'] + messagedbname + '/_design/app'
     searchfunction = '''function(doc){
-    index("text", doc.text);
-    index("title", doc.title);
-    index("author", doc.author);
-    index("date", doc.date, {"facet": true})}'''
-    
+    index("text", doc.text, {"store":true});
+    index("title", doc.title, {"store":true});
+    index("author", doc.author, {"store":true});
+    index("date", doc.date, {"store":true, "facet": true})}'''
+
+    messages = dict(index = searchfunction)
+    indexes = dict(messages = messages)
+
     message_search = dict(analyzer = 'standard',
-                          index = searchfunction)
+                          indexes = indexes)
     header = {'Cookie': authcookie, 'Content-Type': 'application/json'}
     response = requests.put(url,
                             data = json.dumps(message_search),

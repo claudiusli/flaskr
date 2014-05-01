@@ -27,12 +27,16 @@ app.config.from_object(__name__)
 #FLASKR_SETTINGS = '/Users/mike/SkyDrive/Personal/Education/flask/flaskr/FLASKR_SETTINGS.ini'
 #app.config.from_envvar('FLASKR_SETTINGS', silent=False)
 
+dbu = 'thentonsellaillinneresil'
+dbp = 'VGYTTeQibCCjqI5sSvo0u4Bk'
+
 # Make sure you are installed
 def connect_db(account_name, database_name):
 	"""Returns a new connection to the Cloudant database."""
 	app.logger.debug('Connecting to Cloudant database...')
 	#account = cloudant.Account(app.config['ACCOUNT'])
         account = cloudant.Account(account_name)
+        account.login(dbu, dbp)
 	return account.database(database_name)
 	#app.logger.debug('Connected to Cloudant database...')
 
