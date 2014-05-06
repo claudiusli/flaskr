@@ -96,8 +96,9 @@ def create_db(dbname, authcookie):
 
 def set_perms(dbname, username, authcookie):
     '''
-    Let's hope this version works
+    This is a programatic way of doing:
     curl -X POST https://cloudant.com/api/set_permissions -H 'Cookie: <authcooke>' -d 'database=<username>/<dbname>&username=<username>&roles=_writer&roles=_reader'
+    But we probably shouldn't use it. Instead write to _security
     '''
     url = 'https://cloudant.com/api/set_permissions'
     #data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
