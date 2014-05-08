@@ -1,18 +1,16 @@
 # all the imports
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 import time
-import cloudant
+import sys
+import os
+import getopt
 import logging
+import cloudant
+from pprint import pprint
 
-# configuration (could also be in external file...see below)
-# Create a database called DATABASE in your ACCOUNT.cloudant.com and make it world-writeable
-ACCOUNT = 'claudiusli'
-MESSAGEDB = 'flaskr_message'
-USERDB = 'flaskr_user'
-DEBUG = True
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
+# configuration
+# check flaskr.settings
+# To run export FLASKR_SETTINGS='flaskr.settings'
 
 # create our little application :)
 # it seems that using __name__ is not canonical
@@ -24,11 +22,37 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 # Set this environment variable using export FLASKR_SETTINGS=....
-#FLASKR_SETTINGS = '/Users/mike/SkyDrive/Personal/Education/flask/flaskr/FLASKR_SETTINGS.ini'
-#app.config.from_envvar('FLASKR_SETTINGS', silent=False)
+#FLASKR_SETTINGS = '/Users/Claudius/src/flaskr/flaskr.settings'
+app.config.from_envvar('FLASKR_SETTINGS', silent=False)
 
-dbu = 'thentonsellaillinneresil'
-dbp = 'VGYTTeQibCCjqI5sSvo0u4Bk'
+config = dict(username='',
+              password='')
+
+def parse_args(argv):
+        '''
+        parse through the argument list and update the config dict as appropriate
+        '''
+        usage = 'python ' + os.path.basename(__file__) + ' -u <username> -p <password>'
+        try:
+                opts, args = getopt.getopt(argv, "hu:p:", 
+                                           ["username=",
+                                            "password="
+                                    ])
+        except getopt.GetoptError:
+                print usage
+                sys.exit(2)
+        for opt, arg in opts:
+                if opt == '-h':
+                        print usage
+                        sys.exit()
+                elif opt in ("-u", "--username"):
+                        config['username'] = arg
+                elif opt in ("-p", "--password"):
+                        config['password'] = arg
+        if config['username'] == '' or config['password'] == '':
+                print usage
+                pprint(config)
+                sys.exit()
 
 # Make sure you are installed
 def connect_db(account_name, database_name):
@@ -36,7 +60,7 @@ def connect_db(account_name, database_name):
 	app.logger.debug('Connecting to Cloudant database...')
 	#account = cloudant.Account(app.config['ACCOUNT'])
         account = cloudant.Account(account_name)
-        account.login(dbu, dbp)
+        account.login(config['username'],config['password'])
 	return account.database(database_name)
 	#app.logger.debug('Connected to Cloudant database...')
 
@@ -121,5 +145,9 @@ app.logger.setLevel(logging.DEBUG)
  
 #logging.basicConfig(filename='example.log',level=logging.INFO)
 
-if __name__ == '__main__':
+def main(argv):
+        parse_args(argv)
 	app.run()
+
+if __name__ == '__main__':
+        main(sys.argv[1:])
