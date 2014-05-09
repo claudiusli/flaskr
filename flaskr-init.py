@@ -13,7 +13,7 @@ python flaskr-init.py -u <username>
 
 The user will be prompted for their password.
 
-If the user and messages database do not exist create them, create the 
+If the flaskr database do not exist create it, create the
 apropriate views and show the api key/password.
 
 Otherwise exit with an error message.
@@ -22,8 +22,7 @@ Otherwise exit with an error message.
 config = dict(
     username = '',
     password = '',
-    userdbname = 'flaskr_user',
-    messagedbname = 'flaskr_message'
+    dbname = 'flaskr'
     )
 
 def parse_args(argv):
@@ -98,10 +97,10 @@ def set_perms(dbname, username, authcookie):
     '''
     This is a programatic way of doing:
     curl -X POST https://cloudant.com/api/set_permissions -H 'Cookie: <authcooke>' -d 'database=<username>/<dbname>&username=<username>&roles=_writer&roles=_reader'
-    But we probably shouldn't use it. Instead write to _security
+    For more complex interactions you can use _security
+    But be careful you can cause problems with your database.
     '''
     url = 'https://cloudant.com/api/set_permissions'
-    #data = 'database={0}/{1}&username={2}&roles=_reader&roles=_writer'.format(config['username'], dbname, username)
     data = dict( database = config['username'] + '/' + dbname,
                  username = username,
                  roles = ['_reader', '_writer']
@@ -114,8 +113,8 @@ def set_perms(dbname, username, authcookie):
                              data = urllib.urlencode(data, doseq=True),
                              headers = header)
                 
-def create_design_docs(messagedbname, authcookie):
-    url = config['baseurl'] + messagedbname + '/_design/app'
+def create_design_docs(dbname, authcookie):
+    url = config['baseurl'] + dbname + '/_design/app'
     searchfunction = '''function(doc){
     index("text", doc.text, {"store":true});
     index("title", doc.title, {"store":true});
@@ -136,11 +135,9 @@ def init_dbs():
     init_params()
     authcookie = authenticate()
     api_key = generate_api_key(authcookie)
-    create_db(config['userdbname'], authcookie)
-    create_db(config['messagedbname'], authcookie)
-    set_perms(config['userdbname'], api_key['user'], authcookie)
-    set_perms(config['messagedbname'], api_key['user'], authcookie)
-    create_design_docs(config['messagedbname'], authcookie)
+    create_db(config['dbname'], authcookie)
+    set_perms(config['dbname'], api_key['user'], authcookie)
+    create_design_docs(config['dbname'], authcookie)
     
 def main(argv):
     parse_args(argv)
