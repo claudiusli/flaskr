@@ -25,8 +25,6 @@ app.config.from_object(__name__)
 #FLASKR_SETTINGS = '/Users/Claudius/src/flaskr/flaskr.settings'
 app.config.from_envvar('FLASKR_SETTINGS', silent=False)
 
-config = dict(username='',
-              password='')
 
 def parse_args(argv):
         '''
@@ -46,28 +44,28 @@ def parse_args(argv):
                         print usage
                         sys.exit()
                 elif opt in ("-u", "--username"):
-                        config['username'] = arg
+                        app.config['DBUSER'] = arg
                 elif opt in ("-p", "--password"):
-                        config['password'] = arg
-        if config['username'] == '' or config['password'] == '':
+                        app.config['DBPASSWORD'] = arg
+        if app.config['DBUSER'] == '' or app.config['DBPASSWORD'] == '':
                 print usage
-                pprint(config)
                 sys.exit()
+        print app.config['DBUSER']
+        print app.config['DBPASSWORD']
 
 # Make sure you are installed
 def connect_db(account_name, database_name):
 	"""Returns a new connection to the Cloudant database."""
 	app.logger.debug('Connecting to Cloudant database...')
-	#account = cloudant.Account(app.config['ACCOUNT'])
-        account = cloudant.Account(account_name)
-        account.login(config['username'],config['password'])
+	account = cloudant.Account(app.config['ACCOUNT'])
+        account.login(app.config['DBUSER'],app.config['DBPASSWORD'])
 	return account.database(database_name)
 	#app.logger.debug('Connected to Cloudant database...')
 
 @app.before_request
 def before_request():
     """Make sure we are connected to the database each request."""
-    g.db = connect_db(app.config['ACCOUNT'], app.config['MESSAGEDB'])
+    g.db = connect_db(app.config['ACCOUNT'], app.config['DBNAME'])
     #Entry.set_db(g.db)
 
 @app.teardown_request

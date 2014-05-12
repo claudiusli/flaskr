@@ -1,0 +1,8 @@
+ACCOUNT = 'claudiusli'
+DBNAME = 'flaskr'
+DEBUG = True
+SECRET_KEY = 'development key'
+USERNAME = 'admin'
+PASSWORD = 'default'
+DBUSER = 'heragardlysiongeocksonts'
+DBPASSWORD = 'XI7XD8dhO5q2icqYf0JgGnRl'
